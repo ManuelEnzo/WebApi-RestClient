@@ -9,7 +9,7 @@ namespace WebApi.RestClient.src.Response
     public class RestResponseWithData<T> : RestResponse 
     {
         /// <summary>
-        /// Dato deserializzato della risposta.
+        /// Deserialized data from the response.
         /// </summary>
         public T? Data { get; internal set; }
     }

@@ -5,22 +5,22 @@ namespace WebApi.RestClient.src.Response
     public class RestResponse
     {
         /// <summary>
-        /// Indica se lo stato della risposta è positivo o no.
+        /// Indicate if the request was successful.
         /// </summary>
         public bool IsSuccessful { get; internal set; }
 
         /// <summary>
-        /// Status code della risposta.
+        /// Indicate status code of the response.
         /// </summary>
         public HttpStatusCode StatusCode { get; internal set; }
 
         /// <summary>
-        /// Descrizione dello stato della risposta.
+        /// Description of the status code.
         /// </summary>
         public string? StatusDescription { get; internal set; }
 
         /// <summary>
-        /// Eventuale messaggio d'errore.
+        /// Error message if the request was not successful.
         /// </summary>
         public string? ErrorBody { get; internal set; }
     }

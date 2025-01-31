@@ -1,118 +1,119 @@
 ﻿# WebApi RestClient V1.0.0
 
-## Cos'è WebApi RestClient
-WebApi RestClient è una libreria pensata per semplificare e rendere fluide 
-le chiamate API verso qualsiasi tipo di servizio web. 
-La libreria è progettata per integrarsi con l'**HttpClientFactory** di Microsoft, 
-sfruttando le sue funzionalità per la gestione dei client HTTP, 
-come il pooling delle connessioni, la gestione del ciclo di vita e la configurazione 
-centralizzata degli `HttpClient`.
-La principale caratteristica di questa libreria è l'architettura **Fluent**, 
-che permette di costruire e inviare richieste API in modo intuitivo e leggibile, 
-con una sintassi compatta e facilmente configurabile.
+## What is WebApi RestClient
+WebApi RestClient is a library designed to simplify and make fluid
+API calls to any type of web service.
 
-## Come si usa ?
-Nel file `Program.cs`, puoi registrare i vari **HttpClient** utilizzando il 
-metodo `AddHttpClient`. Questo ti permette di impostare le proprietà comuni 
-delle chiamate API, mantenendo la logica di creazione degli `HttpClient`
-conforme agli standard di **ASP.NET Core**.
+The library is designed to integrate with Microsoft's **HttpClientFactory**,
+taking advantage of its features for managing HTTP clients,
+such as connection pooling, lifecycle management and centralized configuration of
+the `HttpClients`.
 
-Ecco un esempio di configurazione di un client:
+The main feature of this library is the **Fluent** architecture,
+which allows you to build and send API requests in an intuitive and readable way,
+with a compact and easily configurable syntax.
+
+## How to use it?
+In the `Program.cs` file, you can register the various **HttpClients** using the
+`AddHttpClient` method. This allows you to set common properties
+of API calls, keeping the logic of creating the `HttpClient`
+compliant with the **ASP.NET Core** standards.
+
+Here is an example of configuring a client:
 ```csharp
 services.AddHttpClient("api", client =>
 {
-	client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
-	client.DefaultRequestHeaders.Add("Accept", "application/json");
+client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
+client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
 ```
 
-A questo punto è possibile utilizzare la classe **HttpClientBuilderFactory**
-che permette di creare un client con il nome specificato che deve 
-essere uguale a quello inserito all'interno del metodo AddHttpClient.
+At this point you can use the **HttpClientBuilderFactory** class
+that allows you to create a client with the specified name that must
+be the same as the one inserted inside the AddHttpClient method.
 
 ```csharp
 var client = _httpClientBuilderFactory.CreateClient("api");
 ```
-Il metodo **CreateClient** restituirà un'istanza di **HttpClientBuilder**
-la quale ci permette di costruire la nostra chiamata API in modo 
-Fluent.
+The **CreateClient** method will return an instance of **HttpClientBuilder**
+which allows us to build our API call in a
+Fluent way.
 
-## Esempio di utilizzo
+## Usage Example
 
-Con l'istanza di HttpClientBuilder, puoi configurare facilmente la chiamata API, 
-specificando il metodo HTTP, l'endpoint, i parametri di query, il body e così via, 
-utilizzando una sintassi Fluent.
+With the HttpClientBuilder instance, you can easily configure the API call,
+specifying the HTTP method, endpoint, query parameters, body, and so on,
+using a Fluent syntax.
 
-Ecco un esempio di chiamata API con un metodo POST, query parameters e un body JSON:
+Here is an example of an API call with a POST method, query parameters, and a JSON body:
 
 ```csharp
- var response = await client
-                      .WithMethod(HttpMethod.Post)
-                      .WithEndpoint("login")
-                      .WithQueryParameters(new Dictionary<string, string>
-                      {
-                          { "useCookies", "false" },
-                          { "useSessionCookies", "false" }
-                      })
-                      .WithBody(new { email = "test@mail.com", password = "Passw0rd" })
-                      .BuildRequest()
-                      .SendAsync<LoginInfoResponse>();
+var response = await client
+.WithMethod(HttpMethod.Post)
+.WithEndpoint("login")
+.WithQueryParameters(new Dictionary<string, string>
+{
+{ "useCookies", "false" },
+{ "useSessionCookies", "false" }
+})
+.WithBody(new { email = "test@mail.com", password = "Passw0rd" })
+.BuildRequest()
+.SendAsync<LoginInfoResponse>();
 ```
 
-In questo esempio, la chiamata POST viene inviata all'endpoint `login` con i parametri
-di query e il corpo contenente le credenziali di login. 
-La risposta viene poi deserializzata nell'oggetto `LoginInfoResponse`.
+In this example, the POST call is sent to the `login` endpoint with the query
+parameters and the body containing the login credentials.
+The response is then deserialized into the `LoginInfoResponse` object.
 
-## Gestione delle risposte
+## Response Handling
 
-Quando invii una richiesta, la libreria restituisce un oggetto di tipo 
-`RestResponseWithData<T>`, che estende la classe base `RestResponse`. 
-Questo oggetto include diverse proprietà utili per gestire lo stato della risposta,
-come il codice di stato HTTP, una descrizione dello stato, eventuali errori e i 
-dati restituiti dalla chiamata.
+When you send a request, the library returns an object of type
+`RestResponseWithData<T>`, which extends the base class `RestResponse`.
+This object includes several properties useful for managing the status of the response,
+such as the HTTP status code, a description of the status, any errors, and the
+data returned by the call.
 
 ```csharp
- public class RestResponse
- {
-     /// <summary>
-     /// Indica se lo stato della risposta è positivo o no.
-     /// </summary>
-     public bool IsSuccessful { get; internal set; }
+public class RestResponse
+{
+/// <summary>
+/// Indicates whether the status of the response is successful or not.
+/// </summary>
+public bool IsSuccessful { get; internal set; }
 
-     /// <summary>
-     /// Status code della risposta.
-     /// </summary>
-     public HttpStatusCode StatusCode { get; internal set; }
+/// <summary>
+/// Status code of the response.
+/// </summary>
+public HttpStatusCode StatusCode { get; internal set; }
 
-     /// <summary>
-     /// Descrizione dello stato della risposta.
-     /// </summary>
-     public string? StatusDescription { get; internal set; }
+/// <summary>
+/// Description of the status of the response.
+/// </summary>
+public string? StatusDescription { get; internal set; }
 
-     /// <summary>
-     /// Eventuale messaggio d'errore.
-     /// </summary>
-     public string? ErrorBody { get; internal set; }
- }
+/// <summary>
+/// Any error message.
+/// </summary>
+public string? ErrorBody { get; internal set; }
+}
 ```
 ```csharp
 public class RestResponseWithData<T> : RestResponse
 {
-    /// <summary>
-    /// I dati restituiti dalla risposta API.
-    /// </summary>
-    public T? Data { get; internal set; }
+/// <summary>
+/// The data returned by the API response.
+/// </summary>
+public T? Data { get; internal set; }
 }
 ```
 
-Questa struttura consente di gestire facilmente gli errori e i dati restituiti 
-dalle chiamate API, centralizzando la logica di gestione delle risposte e 
-migliorando la leggibilità del codice.
+This framework allows you to easily handle errors and data returned
+from API calls, centralizing the response handling logic and
+improving code readability.
 
-## Caratteristiche principali
-- **Fluent API**: costruisci e invia chiamate API in modo intuitivo e leggibile.
-- **Supporto per i principali metodi HTTP**: GET, POST, PUT, DELETE, ecc.
-- **Gestione centralizzata degli HttpClient**: sfrutta le funzionalità di HttpClientFactory.
-- **Deserializzazione automatica della risposta**: deserializza automaticamente i 
-        dati restituiti dalla chiamata API in base al tipo specificato.
-- **Gestione degli errori**: gestisci facilmente gli errori e le eccezioni delle chiamate API.
+## Key Features
+- **Fluent API**: Build and send API calls in an intuitive and readable way.
+- **Support for major HTTP methods**: GET, POST, PUT, DELETE, etc.
+- **Centralized HttpClient Management**: Leverage HttpClientFactory capabilities.
+- **Automatic Response Deserialization**: Automatically deserialize the data returned by the API call based on the specified type.
+- **Error Handling**: Easily handle API call errors and exceptions.

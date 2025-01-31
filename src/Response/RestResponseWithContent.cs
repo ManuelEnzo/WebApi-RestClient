@@ -9,7 +9,7 @@ namespace WebApi.RestClient.src.Response
     public class RestResponseWithContent : RestResponse
     {
         /// <summary>
-        /// Contenuto della risposta.
+        /// Content of the response.
         /// </summary>
         public string? Content { get;  set; }    
     }
