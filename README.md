@@ -19,6 +19,11 @@ In the `Program.cs` file, you can register the various **HttpClients** using the
 of API calls, keeping the logic of creating the `HttpClient`
 compliant with the **ASP.NET Core** standards.
 
+At the same time you have to add the line before register your httpclient:
+```csharp
+builder.Services.AddRestClient();
+```
+
 Here is an example of configuring a client:
 ```csharp
 services.AddHttpClient("api", client =>
