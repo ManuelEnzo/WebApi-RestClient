@@ -23,9 +23,20 @@ Here is an example of configuring a client:
 ```csharp
 services.AddHttpClient("api", client =>
 {
-client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
-client.DefaultRequestHeaders.Add("Accept", "application/json");
+  client.BaseAddress = new Uri("https://jsonplaceholder.typicode.com/");
+  client.DefaultRequestHeaders.Add("Accept", "application/json");
 });
+```
+If you are in blazor WebAssembly you can register your HttpClient like this :
+```csharp
+builder.Services.AddScoped(sp => new HttpClient { BaseAddress = new Uri("http://localhost:5154/") });
+```
+You must insert this after your HttpClient :
+```csharp
+builder.Services.AddRestClient();
+
+//If you have WebAssembly project
+builder.Services.AddRestClient(builder); //builder is WebAssemblyHostBuilder
 ```
 
 At this point you can use the **HttpClientBuilderFactory** class
@@ -49,16 +60,16 @@ Here is an example of an API call with a POST method, query parameters, and a JS
 
 ```csharp
 var response = await client
-.WithMethod(HttpMethod.Post)
-.WithEndpoint("login")
-.WithQueryParameters(new Dictionary<string, string>
-{
-{ "useCookies", "false" },
-{ "useSessionCookies", "false" }
-})
-.WithBody(new { email = "test@mail.com", password = "Passw0rd" })
-.BuildRequest()
-.SendAsync<LoginInfoResponse>();
+    .WithMethod(HttpMethod.Post)
+    .WithEndpoint("login")
+    .WithQueryParameters(new Dictionary<string, string>
+    {
+    { "useCookies", "false" },
+    { "useSessionCookies", "false" }
+    })
+    .WithBody(new { email = "test@mail.com", password = "Passw0rd" })
+    .BuildRequest()
+    .SendAsync<LoginInfoResponse>();
 ```
 
 In this example, the POST call is sent to the `login` endpoint with the query
