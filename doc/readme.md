@@ -1,4 +1,4 @@
-﻿# WebApi RestClient V1.0.0
+﻿# WebApi RestClient V1.0.1
 
 ## What is WebApi RestClient
 WebApi RestClient is a library designed to simplify and make fluid
