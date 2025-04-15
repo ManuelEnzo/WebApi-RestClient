@@ -8,11 +8,12 @@ using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Xml.Linq;
+using WebApi.RestClient.src.ExtensionMethods;
 using WebApi.RestClient.src.SendRequest;
 
 namespace WebApi.RestClient.src.Builder
 {
-    public interface IHttpRequestBuilder
+    public interface IHttpRequestBuilder : IDisposable
     {
         /// <summary>
         /// Add a header to the request.
@@ -65,13 +66,21 @@ namespace WebApi.RestClient.src.Builder
         IHttpRequestBuilder WithTimeOut(TimeSpan? timeOut);
 
         /// <summary>
+        /// Set the authorization for the request.
+        /// </summary>
+        /// <param name="type"></param>
+        /// <param name="token"></param>
+        /// <returns></returns>
+        IHttpRequestBuilder WithAuthorization(AuthorizationEnum type, string token);
+
+        /// <summary>
         /// Build the request.
         /// </summary>
         /// <returns></returns>
         IHttpRequestExecutor BuildRequest();
     }
 
-    public class HttpRequestBuilder(HttpClient httpClient) : IHttpRequestBuilder
+    public class HttpRequestBuilder(HttpClient httpClient, RestClientOptions? clientOptions) : IHttpRequestBuilder
     {
         private string? _resource;
         private HttpMethod _method;
@@ -80,6 +89,7 @@ namespace WebApi.RestClient.src.Builder
         private HttpContent? _body;
         private BodyType _bodyType;
         private readonly HttpClient _httpClient = httpClient;
+        private readonly RestClientOptions? _clientOptions = clientOptions;
         private TimeSpan? _timeOut;
         public IHttpRequestBuilder WithHeader(string key, string value)
         {
@@ -130,13 +140,13 @@ namespace WebApi.RestClient.src.Builder
 
         public IHttpRequestBuilder WithTimeOut(TimeSpan? timeOut)
         {
-           _timeOut = timeOut;
+            _timeOut = timeOut;
             return this;
         }
 
         public IHttpRequestExecutor BuildRequest()
         {
-            return new HttpRequestExecutor(_httpClient, BuildHttpRequestMessage());
+            return new HttpRequestExecutor(_httpClient, BuildHttpRequestMessage(), _bodyType, _clientOptions);
         }
 
 
@@ -189,6 +199,21 @@ namespace WebApi.RestClient.src.Builder
             return xml.ToString();
         }
 
+        public IHttpRequestBuilder WithAuthorization(AuthorizationEnum type, string token)
+        {
+            if (string.IsNullOrEmpty(token))
+                throw new ArgumentException("Il token non può essere null o vuoto", nameof(token));
+            if (_httpClient.DefaultRequestHeaders.Authorization != null)
+                throw new InvalidOperationException("Authorization is already set");
+            _httpClient.DefaultRequestHeaders.Authorization = new System.Net.Http.Headers.AuthenticationHeaderValue(type.ToString(), token);
+            return this;
+        }
+
+        public void Dispose()
+        {
+            GC.SuppressFinalize(this);
+        }
+       
     }
 
     public enum BodyType

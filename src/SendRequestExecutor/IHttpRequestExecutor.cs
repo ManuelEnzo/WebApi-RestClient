@@ -7,10 +7,12 @@ using Microsoft.Extensions.Logging;
 using XSerializer;
 using WebApi.RestClient.src.Response;
 using WebApi.RestClient.src.Builder;
+using System.Text.Json.Serialization.Metadata;
+using WebApi.RestClient.src.ExtensionMethods;
 
 namespace WebApi.RestClient.src.SendRequest
 {
-    public interface IHttpRequestExecutor : IDisposable
+    public interface IHttpRequestExecutor
     {
         /// <summary>
         /// Send the HTTP request asynchronously.
@@ -32,12 +34,14 @@ namespace WebApi.RestClient.src.SendRequest
         private readonly HttpClient _httpClient;
         private readonly HttpRequestMessage _requestMessage;
         private readonly BodyType _bodyType;
+        private readonly RestClientOptions? _restClientOptions;
 
-        public HttpRequestExecutor(HttpClient httpClient, HttpRequestMessage requestMessage, BodyType bodyType = BodyType.Json)
+        public HttpRequestExecutor(HttpClient httpClient, HttpRequestMessage requestMessage, BodyType bodyType = BodyType.Json, RestClientOptions? jsonPropertyInfo = null!)
         {
             _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
             _requestMessage = requestMessage ?? throw new ArgumentNullException(nameof(requestMessage));
             _bodyType = bodyType;
+            _restClientOptions = jsonPropertyInfo;
         }
 
         public async Task<RestResponseWithContent> SendAsync(CancellationToken cancellationToken = default)
@@ -114,18 +118,20 @@ namespace WebApi.RestClient.src.SendRequest
         private T? TryDeserialize<T>(string content)
         {
             if (string.IsNullOrWhiteSpace(content)) return default;
+            JsonSerializerOptions jsonSerializer = _restClientOptions?.JsonSerializerOptions ?? new JsonSerializerOptions
+            {
+                PropertyNameCaseInsensitive = true,
+                PropertyNamingPolicy = System.Text.Json.JsonNamingPolicy.CamelCase,
+                WriteIndented = true
+            };
             return _bodyType switch
             {
-                BodyType.Json => System.Text.Json.JsonSerializer.Deserialize<T>(content),
+                BodyType.Json => System.Text.Json.JsonSerializer.Deserialize<T>(content, jsonSerializer),
                 BodyType.Xml => new XmlSerializer<T>().Deserialize(content),
                 _ => default
             };
         }
 
-        public void Dispose()
-        {
-            // Do not dispose HttpClient when using IHttpClientFactory
-        }
     }
 
     public static class ResponseMapper

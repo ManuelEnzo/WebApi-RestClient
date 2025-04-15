@@ -1,10 +1,11 @@
 ﻿using System;
 using System.Net.Http;
 using WebApi.RestClient.src.Builder;
+using WebApi.RestClient.src.ExtensionMethods;
 
 namespace WebApi.RestClient.src.HttpFactory
 {
-    public interface IHttpClientBuilderFactory
+    public interface IHttpClientBuilderFactory : IDisposable
     {
         /// <summary>
         /// Factory to create a customized HttpClient, 
@@ -26,6 +27,7 @@ namespace WebApi.RestClient.src.HttpFactory
     public class HttpClientBuilderFactory : IHttpClientBuilderFactory
     {
         private readonly IHttpClientFactory? _httpClientFactory;
+        private readonly RestClientOptions? _restClientOptions;
         private readonly HttpClient? _httpClient;
 
         /// <summary>
@@ -40,6 +42,29 @@ namespace WebApi.RestClient.src.HttpFactory
         /// <param name="httpClient"></param>
         public HttpClientBuilderFactory(HttpClient? httpClient) => _httpClient = httpClient;
 
+        /// <summary>
+        /// Constructor for application that using IHttpClientFactory
+        /// </summary>
+        /// <param name="httpClientFactory"></param>
+        /// <param name="restClientOptions"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public HttpClientBuilderFactory(IHttpClientFactory httpClientFactory, RestClientOptions? restClientOptions)
+        {
+            _httpClientFactory = httpClientFactory ?? throw new ArgumentNullException(nameof(httpClientFactory));
+            _restClientOptions = restClientOptions;
+        }
+
+        /// <summary>
+        /// Constructor for application that not using IHttpClientFactory
+        /// </summary>
+        /// <param name="httpClient"></param>
+        /// <param name="restClientOptions"></param>
+        /// <exception cref="ArgumentNullException"></exception>
+        public HttpClientBuilderFactory(HttpClient httpClient, RestClientOptions? restClientOptions)
+        {
+            _httpClient = httpClient ?? throw new ArgumentNullException(nameof(httpClient));
+            _restClientOptions = restClientOptions;
+        }
 
         public IHttpRequestBuilder CreateClient(string name)
         {
@@ -47,7 +72,7 @@ namespace WebApi.RestClient.src.HttpFactory
             {
                 throw new ArgumentNullException(nameof(_httpClientFactory));
             }
-            return new HttpRequestBuilder(_httpClientFactory.CreateClient(name));
+            return new HttpRequestBuilder(_httpClientFactory.CreateClient(name), _restClientOptions);
         }
 
         public IHttpRequestBuilder CreateClient()
@@ -56,7 +81,13 @@ namespace WebApi.RestClient.src.HttpFactory
             {
                 throw new ArgumentNullException(nameof(_httpClient));
             }
-            return new HttpRequestBuilder(_httpClient);
+            return new HttpRequestBuilder(_httpClient, _restClientOptions);
         }
+
+        public void Dispose()
+        {
+           _httpClient?.Dispose();
+        }
+
     }
 }
